@@ -20,7 +20,7 @@ const ImageLinkForm = ({ onInputChange, onSubmit }) => {
                     >
                         Get le'face
                     </button>
-                </div>
+                </div>  
     		</div>
     	</div>
 
