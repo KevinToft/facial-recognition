@@ -8,13 +8,10 @@ import Rank from './components/Rank/Rank';
 import Particles from 'react-particles-js';
 import Clarifai from 'clarifai';
 
-function log(d) {
-  try {
-    console.log(JSON.stringify(d, null, 2));
-  } catch (e) {
-    console.log(d + " --- " + e);
-  }
-}
+
+const app = new Clarifai.App({
+ apiKey: '7bb56a86c8534ff3bab1c0f2e9017e09'
+});
 
 const particlesOptions = {
   particles: {
@@ -28,17 +25,35 @@ const particlesOptions = {
   }
 }
 
-const app = new Clarifai.App({
- apiKey: '7bb56a86c8534ff3bab1c0f2e9017e09'
-});
 
 class App extends Component {
   constructor() {
     super();
     this.state = {
       input: '', 
-      imageUrl: ''
+      imageUrl: '', 
+      box: {}
     } 
+  }
+
+  //based on provided image, calculate size of box to be rendered
+  calculateFaceBox = (data) => {
+    console.log(data);
+    const face = data.outputs[0].data.regions[0].region_info.bounding_box;
+    const image = document.getElementById('inputImage');
+    const width = Number(image.width);
+    const height = Number(image.height);
+    return {
+      left: face.left_col * width,
+      right: width - (face.right_col * width),
+      top: face.top_row * height,
+      bottom: height - (face.bottom_row * height)
+    }
+  }
+
+  placeFaceBorder = (box) => {
+    console.log(box);
+    this.setState({box:box})
   }
 
   onInputChange = (event) => {
@@ -52,8 +67,8 @@ class App extends Component {
       .predict(
         Clarifai.FACE_DETECT_MODEL,
         this.state.input)
-      .then(response => console.log(response))
-      .catch(err => console.log(err));
+      .then(response => this.placeFaceBorder(this.calculateFaceBox(response)))
+      .catch(e => console.log(e));
   }
   
   render () {
@@ -69,7 +84,7 @@ class App extends Component {
           onInputChange={this.onInputChange}
           onSubmit={this.onSubmit}
         />
-        <FaceRecognition imageUrl={this.state.imageUrl}/>
+        <FaceRecognition box={this.state.box} imageUrl={this.state.imageUrl}/>
       </div>
     );
   }
